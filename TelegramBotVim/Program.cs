@@ -1,9 +1,12 @@
 ﻿using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Polling;
-using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
+using InputFile = Telegram.Bot.Types.InputFile;
+using Message = Telegram.Bot.Types.Message;
+using ParseMode = Telegram.Bot.Types.Enums.ParseMode;
+using Update = Telegram.Bot.Types.Update;
+using UpdateType = Telegram.Bot.Types.Enums.UpdateType;
 
 namespace TelegramBotVim;
 
@@ -37,16 +40,12 @@ public class TelegramBot
 
     private async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
     {
-        // Обработка входящих сообщений
         if (update.Message is not null)
         {
             await HandleMessageAsync(botClient, update.Message, cancellationToken);
         }
-        // Обработка нажатий на кнопки
-        else if (update.CallbackQuery is not null)
-        {
-            await HandleCallbackQueryAsync(botClient, update.CallbackQuery, cancellationToken);
-        }
+       
+        
     }
     private Task HandlePollingErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
     {
@@ -61,105 +60,154 @@ public class TelegramBot
         return Task.CompletedTask;
     }
 
-    private async Task HandleMessageAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
+    private async Task HandleMessageAsync(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
     {
-        if (update.Message != null)
+        switch (message.Text)
         {
-            // Обработка сообщений
-            if (update.Message.Text == "/start")
-            {
-                await SendMainMenuAsync(botClient, update.Message.Chat.Id, cancellationToken);
-            }
-            else if (update.Message.Text.Length == 1 && int.TryParse(update.Message.Text, out int lessonNumber))
-            {
-                await HandleLessonAsync(botClient, update.Message, lessonNumber, cancellationToken);
-            }
-            else
-            {
-                // Обработка других сообщений
-                await botClient.SendTextMessageAsync(
-                    chatId: update.Message.Chat.Id,
-                    text: "Извините, я не понимаю этой команды. Введите номер урока от 1 до 10.",
-                    cancellationToken: cancellationToken);
-            }
-        }
-        else if (update.CallbackQuery != null)
-        {
-            // Обработка callback_data
-            await HandleCallbackQueryAsync(botClient, update.CallbackQuery, cancellationToken);
-        }
-    }
-
-
-    // Обработка нажатия на кнопку с использованием callback_data
-    private async Task HandleCallbackQueryAsync(ITelegramBotClient botClient, CallbackQuery callbackQuery, CancellationToken cancellationToken)
-    {
-        switch (callbackQuery.Data)
-        {
-            case "lesson1":
-                await HandleLesson1Async(botClient, callbackQuery.Message, cancellationToken);
+            case "/start":
+                await SendMainMenuAsync(botClient, message.Chat.Id, cancellationToken);
                 break;
-            case "lesson2":
-                await HandleLesson2Async(botClient, callbackQuery.Message, cancellationToken);
-                break;
-            case "lesson3":
-                await HandleLesson3Async(botClient, callbackQuery.Message, cancellationToken);
-                break;
-            
-        }
-    }
-    private async Task HandleLessonAsync(ITelegramBotClient botClient, Message message, int lessonNumber, CancellationToken cancellationToken)
-    {
-        switch (lessonNumber)
-        {
-            case 1:
+            case "Урок 1":
                 await HandleLesson1Async(botClient, message, cancellationToken);
                 break;
-            case 2:
+            case "Урок 2":
                 await HandleLesson2Async(botClient, message, cancellationToken);
                 break;
-            case 3:
+            case "Урок 3":
                 await HandleLesson3Async(botClient, message, cancellationToken);
                 break;
-            // Добавьте обработку других уроков
+            case "Урок 4":
+                await HandleLesson4Async(botClient, message, cancellationToken);
+                break;
+            case "Урок 5":
+                await HandleLesson5Async(botClient, message, cancellationToken);
+                break;
+            case "Урок 6":
+                await HandleLesson6Async(botClient, message, cancellationToken);
+                break;
+            case "Урок 7":
+                await HandleLesson7Async(botClient, message, cancellationToken);
+                break;
+            case "Урок 8":
+                await HandleLesson8Async(botClient, message, cancellationToken);
+                break;
+            case "Урок 9":
+                await HandleLesson9Async(botClient, message, cancellationToken);
+                break;
+            case "Урок 10":
+                await HandleLesson10Async(botClient, message, cancellationToken);
+                break;
+            case "Пройти тест":
+                break;
             default:
+            {
                 await botClient.SendTextMessageAsync(
+                    parseMode: ParseMode.Html,
                     chatId: message.Chat.Id,
-                    text: $"Извините, урока {lessonNumber} пока нет.",
+                    text:
+                    "Извините, я не понимаю этой команды. Введите \"Урок N\", где N - это номер урока от 1 до 10.\n" +
+                    "\n<b>С более подробными аннтоациями можете в панели ниже</b>",
                     cancellationToken: cancellationToken);
                 break;
+            }
         }
     }
 
+    
 
     private async Task SendMainMenuAsync(ITelegramBotClient botClient, long chatId, CancellationToken cancellationToken)
     {
         // Создание кнопок главного меню
-        var inlineKeyboard = new InlineKeyboardMarkup(
+        var keyboard = new ReplyKeyboardMarkup(
             new[]
             {
                 new[]
                 {
-                    InlineKeyboardButton.WithCallbackData("Урок 1 - что такое Vim?", "lesson1"),
-                    InlineKeyboardButton.WithCallbackData("Урок 2", "lesson2"),
-                    InlineKeyboardButton.WithCallbackData("Урок 3", "lesson3")
+                    new KeyboardButton("Урок 1")
+                },
+                new[]
+                {
+                    new KeyboardButton("Урок 2")
+                },
+                new[]
+                {
+                    new KeyboardButton("Урок 3")
+                }
+                ,
+                new[]
+                {
+                    new KeyboardButton("Урок 4")
+                },
+                new[]
+                {
+                    new KeyboardButton("Урок 5")
+                },
+                new[]
+                {
+                    new KeyboardButton("Урок 6")
+                },
+                new[]
+                {
+                    new KeyboardButton("Урок 7")
+                },
+                new[]
+                {
+                    new KeyboardButton("Урок 8")
                 }
             }
+            
         );
 
         await botClient.SendTextMessageAsync(
             chatId: chatId,
             text: "Добро пожаловать в бот для изучения Vim! Выберите урок:",
-            replyMarkup: inlineKeyboard,
+            replyMarkup: keyboard,
             cancellationToken: cancellationToken);
     }
+    
+
 
     private async Task HandleLesson1Async(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
     {
-        await botClient.SendTextMessageAsync(
+        string lessonText_1 = "Vim \\- довольно странный редактор\\. \n\n" +
+                      "В нем есть режимы :/\n\n" +
+                      "Режим для навигации/редактирования, режим для вставки текста, режим для выделения текста\\. \n\n" +
+                      "Это дает Vim возможность по\\-настоящему использовать преимущества вашей клавиатуры, потому что он может сосредоточиться только на одной задаче за раз\\.";
+
+        string lessonText_2 =
+            "Давайте начнем отработку основ передвижения в normal режиме: `hjkl` позволяет перемещать курсор на один пробел в любом направлении\\.";
+        string lessonText_3 = ">>      ↑\n" +
+                              ">>← h j k l →\n" +
+                              ">>        ↓";
+        string lessonText_4 =
+            "Теперь, когда мы освоили самые основные приемы, давайте посмотрим, как можно заставить редактор вести себя так, как вы привыкли: в режиме **Insert** Vim вставляет фрагменты текста и кода, как обычный редактор\\.\n\n" +
+            "Введите i, чтобы перейти в режим **Insert**\\.\n" +
+        "Наберите **<ESC>**, **<CTRL-[>** или **<CTRL-C>**, чтобы вернуться в **обычный режим**\\.";
+        
+        await botClient.SendPhotoAsync(
+            parseMode: ParseMode.MarkdownV2,
             chatId: message.Chat.Id,
-            text: "Это Урок 1. ",
+            photo: InputFile.FromUri("https://postimg.cc/sBJhSkmf"),
+            caption: lessonText_1,
             cancellationToken: cancellationToken);
+        
+        await botClient.SendTextMessageAsync(
+            parseMode: ParseMode.MarkdownV2,
+            chatId: message.Chat.Id,
+            text: lessonText_2,
+            cancellationToken: cancellationToken);
+        await botClient.SendTextMessageAsync(
+            parseMode: ParseMode.MarkdownV2,
+            chatId: message.Chat.Id,
+            text: lessonText_3,
+            cancellationToken: cancellationToken);
+        await botClient.SendTextMessageAsync(
+            parseMode: ParseMode.MarkdownV2,
+            chatId: message.Chat.Id,
+            text: lessonText_4,
+            cancellationToken: cancellationToken);
+        
+         
     }
     private async Task HandleLesson2Async(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
     {
@@ -175,6 +223,62 @@ public class TelegramBot
             chatId: message.Chat.Id,
             
             text: "Это Урок 3. ",
+            cancellationToken: cancellationToken);
+    }
+    private async Task HandleLesson4Async(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
+    {
+        await botClient.SendTextMessageAsync(
+            chatId: message.Chat.Id,
+            
+            text: "Это Урок 4. ",
+            cancellationToken: cancellationToken);
+    }
+    private async Task HandleLesson5Async(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
+    {
+        await botClient.SendTextMessageAsync(
+            chatId: message.Chat.Id,
+            
+            text: "Это Урок 5. ",
+            cancellationToken: cancellationToken);
+    }
+    private async Task HandleLesson6Async(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
+    {
+        await botClient.SendTextMessageAsync(
+            chatId: message.Chat.Id,
+            
+            text: "Это Урок 6. ",
+            cancellationToken: cancellationToken);
+    }
+    private async Task HandleLesson7Async(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
+    {
+        await botClient.SendTextMessageAsync(
+            chatId: message.Chat.Id,
+            
+            text: "Это Урок 7. ",
+            cancellationToken: cancellationToken);
+    }
+    private async Task HandleLesson8Async(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
+    {
+        await botClient.SendTextMessageAsync(
+            chatId: message.Chat.Id,
+            
+            text: "Это Урок 8. ",
+            cancellationToken: cancellationToken);
+    }
+    private async Task HandleLesson9Async(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
+    {
+        await botClient.SendTextMessageAsync(
+            chatId: message.Chat.Id,
+            
+            text: "Это Урок 9. ",
+            cancellationToken: cancellationToken);
+    }
+    private async Task HandleLesson10Async(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
+    {
+        await botClient.SendTextMessageAsync(
+            chatId: message.Chat.Id,
+            
+            text: "Это Урок 10. ",
             cancellationToken: cancellationToken);
     }
 }
